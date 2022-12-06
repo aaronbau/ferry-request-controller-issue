@@ -1,15 +1,33 @@
-import 'package:ferry/ferry_isolate.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
 import 'package:ferry/ferry.dart';
+import 'package:gql_http_link/gql_http_link.dart';
 
-import './src/client.dart';
-import './src/app.dart';
-
-const apiUrl = "https://pokeapi.dev";
+import 'src/graphql/__generated__/all_pokemon.req.gql.dart';
 
 void main() async {
-  final client = await initClient();
-  GetIt.I.registerLazySingleton<TypedLink>(() => client);
-  runApp(App());
+  final client = Client(
+    link: HttpLink("https://pokeapi.dev"),
+    cache: Cache(),
+  );
+
+  final request = GAllPokemonReq(
+    (b) => b
+      ..vars.limit = 50
+      ..vars.offset = 0,
+  );
+
+  runApp(
+    MaterialApp(
+      title: 'Demo',
+      onGenerateRoute: (_) => MaterialPageRoute(
+        builder: (_) => OutlinedButton(
+          onPressed: () {
+            client.requestController.add(request); // This doesn't send any request.
+            client.request(request); // This doesn't send any request too.
+          },
+          child: const Text('Send Request'),
+        ),
+      ),
+    ),
+  );
 }
